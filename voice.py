@@ -4,6 +4,11 @@ import webbrowser
 import pyjokes
 import re
 import smtplib
+import numpy
+import requests
+import pyautogui
+import time
+import json
 
 engine = pyttsx3.init()
 stopcode = 0
@@ -119,6 +124,9 @@ def gentalk(query):
         owner = 'Avinash'
         talk(owner)
 
+    elif 'thanks' in query or 'excellent' in query:
+        talk("thank you, it is a honour to help you")
+
     else:
         talk("sorry i didn't catch that")
 
@@ -163,11 +171,77 @@ def sendmail():
             exit()
 
 
+def calculate(query):
+    if 'add' in query or 'addition' in query or 'sum' in query or 'plus' in query:
+        numbers = re.findall('[0-9]+', query)
+        numbers = list(map(int, numbers))
+        talk(sum(numbers))
+    elif 'subtract' in query or 'minus' in query or '-' in query:
+        numbers = re.findall('[0-9]+', query)
+        numbers = list(map(int, numbers))
+        talk(numbers[0]-numbers[1])
+    elif 'mulitplication' in query or 'multiply' in query or 'into' in query:
+        numbers = re.findall('[0-9]+', query)
+        numbers = list(map(int, numbers))
+        talk(numpy.prod(numbers))
+    elif 'divide' in query or 'divided' in query:
+        numbers = re.findall('[0-9]+', query)
+        numbers = list(map(int, numbers))
+        talk(numbers[0]/numbers[1])
+    else:
+        search(query)
+
+
+def weather():
+    api_key = "d3c7405be8b93416a47ae7fea760a821"
+    base_url = "http://api.openweathermap.org/data/2.5/weather?"
+    talk("tell me the city name to find weather update")
+    city_name = recognise()
+    complete_url = base_url + "appid=" + api_key + "&q=" + city_name
+    response = requests.get(complete_url)
+    x = response.json()
+    if x["cod"] != "404":
+        y = x["main"]
+        current_temperature = y["temp"]
+        current_pressure = y["pressure"]
+        current_humidiy = y["humidity"]
+        z = x["weather"]
+        weather_description = z[0]["description"]
+        talk(" Temperature is " +
+              str(current_temperature) +
+              ", atmospheric pressure  is " +
+              str(current_pressure) +
+              ", humidity is" +
+              str(current_humidiy) +
+              ", overall weather description is" +
+              str(weather_description))
+
+    else:
+        talk("City Not Found ")
+
+
+def screenshot():
+    name = int(round(time.time()*1000))
+    name = 'D:/voice assistant/assistantshots/{}.png'.format(name)
+    talk("screenshot is taken in 3 seconds")
+    time.sleep(3)
+    img = pyautogui.screenshot(name)
+    talk("image shot")
+    talk("do you want me to show the image")
+    a = recognise()
+    if 'yes' in a:
+        img.show()
+        exit()
+    else:
+        exit()
+
+
 def welcome():
     #talk("welcome to the voice based search assistant")
     #talk("try saying a term to search or ask me a Joke or you can open a application also")
     audio = recognise()
     googwords = ['search', 'google', 'youtube', 'amazon', 'meant', 'mean']
+    calwords = ['add', 'subtract', 'divided', 'multiply', 'into', '-', '+', 'calculate', 'minus', 'plus', '/', 'divide']
     if 'joke' in audio:
         jokes()
         talk("that's a Right One Ha Ha Ha")
@@ -179,9 +253,18 @@ def welcome():
     elif 'mail' in audio or 'email' in audio:
         sendmail()
 
+    elif any(word in audio for word in calwords):
+        calculate(audio)
+
     elif 'stop' in audio or 'exit' in audio:
         talk("good bye sir")
         exit()
+
+    elif 'weather' in audio:
+        weather()
+
+    elif 'screenshot' in audio:
+        screenshot()
 
     else:
         gentalk(audio)
@@ -191,5 +274,7 @@ i = 0
 talk("welcome to the voice based search assistant")
 while i <= 10:
     welcome()
+
+
 
 
