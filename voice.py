@@ -9,6 +9,10 @@ import requests
 import pyautogui
 import time
 import json
+import wikipedia
+import os
+from covid import Covid
+import instaloader
 
 engine = pyttsx3.init()
 stopcode = 0
@@ -64,6 +68,16 @@ def search(query):
         url = 'https://amazon.com/s/?url=search-alias%3Dstripbooks&field-keywords='
         search_url = url + query
 
+    elif 'wikipedia' in query:
+        talk('Searching Wikipedia...')
+        query = query.replace("wikipedia", "")
+        results = wikipedia.summary(query, sentences=2)
+        query = optimize(query)
+        search_url = 'https://en.wikipedia.org/wiki/' + query
+        talk("According to Wikipedia")
+        print(results)
+        talk(results)
+
     else:
         query = optimize(query)
         url = 'https://www.google.co.in/search?q='
@@ -110,7 +124,7 @@ def gentalk(query):
     elif 'do you have feelings' in query or 'do you have emotions' in query:
         talk("i have lots of emotions, i feel happy when i can help you")
 
-    elif 'do you have girlfriend' in query:
+    elif 'do you have a girlfriend' in query:
         talk("No bro, i am single like you")
 
     elif 'what can you do' in query:
@@ -172,9 +186,10 @@ def sendmail():
 
 
 def calculate(query):
-    if 'add' in query or 'addition' in query or 'sum' in query or 'plus' in query:
+    if 'add' in query or 'addition' in query or 'sum' in query or 'plus' in query or '+' in query:
         numbers = re.findall('[0-9]+', query)
         numbers = list(map(int, numbers))
+        print((sum(numbers)))
         talk(sum(numbers))
     elif 'subtract' in query or 'minus' in query or '-' in query:
         numbers = re.findall('[0-9]+', query)
@@ -183,6 +198,7 @@ def calculate(query):
     elif 'mulitplication' in query or 'multiply' in query or 'into' in query:
         numbers = re.findall('[0-9]+', query)
         numbers = list(map(int, numbers))
+        print(numpy.prod(numbers))
         talk(numpy.prod(numbers))
     elif 'divide' in query or 'divided' in query:
         numbers = re.findall('[0-9]+', query)
@@ -236,6 +252,56 @@ def screenshot():
         exit()
 
 
+def instagram():
+    talk("enter the username to download their profile picture")
+    name = input()
+    mod = instaloader.Instaloader()
+    mod.download_profile(name, profile_pic_only=True)
+    talk("image downloaded successfully")
+
+
+def openapp(query):
+    if 'chrome' in query:
+        talk("opening chrome")
+        os.startfile(r"C:\Users\Avinash\AppData\Local\Google\Chrome\Application\chrome.exe")
+    elif 'firefox' in query:
+        talk("opening mozilla firefox")
+        os.startfile(r"C:\Program Files\Mozilla Firefox\firefox.exe")
+    elif 'word' in query or 'ms word' in query:
+        talk("opening microsoft word")
+        os.startfile(r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Microsoft Office\Microsoft Word 2010.lnk")
+    elif 'excel' in query:
+        talk("opening microsoft excel sheet")
+        os.startfile(r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Microsoft Office\Microsoft Excel 2010.lnk")
+    elif 'powerpoint' in query or 'ppt' in query:
+        talk("opening microsoft powerpoint")
+        os.startfile(r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Microsoft Office\Microsoft PowerPoint "
+                     r"2010.lnk")
+    elif 'vscode' in query or 'visual studio' in query:
+        talk("opening visual studio")
+        os.startfile(r"C:\Users\Avinash\AppData\Local\Programs\Microsoft VS Code\Code.exe")
+
+    elif 'teams' in query or 'msteams' in query:
+        talk("opening microsoft teams")
+        os.startfile(r"C:\Users\Avinash\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Microsoft Teams.lnk")
+
+    elif 'steam' in query:
+        talk("opening steam")
+        os.startfile(r"D:\games\steam.exe")
+
+    else:
+        search(query)
+
+
+def covidupdates():
+    covid = Covid()
+    talk("tell the name of the country to find updates")
+    name = recognise()
+    country = covid.get_status_by_country_name(name)
+    talk("confirmed cases are {} , active cases are {}, deaths are {}, recovered cases are {}".
+         format(country.get('confirmed'), country.get('active'), country.get('deaths'), country.get('recovered')))
+
+
 def welcome():
     #talk("welcome to the voice based search assistant")
     #talk("try saying a term to search or ask me a Joke or you can open a application also")
@@ -266,11 +332,20 @@ def welcome():
     elif 'screenshot' in audio:
         screenshot()
 
+    elif 'covid' in audio or 'coronovirus' in audio:
+        covidupdates()
+
+    elif 'instagram' in audio:
+        instagram()
+
+    elif 'open' in audio:
+        openapp(audio)
+
     else:
         gentalk(audio)
 
 
-i = 0
+i = 0 
 talk("welcome to the voice based search assistant")
 while i <= 10:
     welcome()
